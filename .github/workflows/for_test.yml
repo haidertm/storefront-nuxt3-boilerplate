@@ -1,0 +1,31 @@
+name: Manual deploy with test run
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Run tests
+        run: yarn test
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Trigger Webhook with Additional Data
+        run: >
+          curl -X POST "https://vsf2.tm8.co.uk/deploy" 
+          -H "Content-Type: application/json" 
+          --data '{
+            "trigger": "${{ github.event_name }}",
+            "branch": "${{ github.ref }}",
+            "commit": "${{ github.sha }}"
+          }'
